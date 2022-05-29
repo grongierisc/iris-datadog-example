@@ -1,0 +1,13 @@
+FROM python:3.9
+
+WORKDIR /code
+
+COPY ./requirements-flask.txt /code/requirements.txt
+COPY intersystems_irispython-3.2.0-py3-none-any.whl /code/intersystems_irispython-3.2.0-py3-none-any.whl
+
+RUN pip install /code/*.whl
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY ./src/python /code/app
+
+CMD ["gunicorn", "--conf", "app/gunicorn_conf.py", "--bind", "0.0.0.0:80", "wsgi:app"]
