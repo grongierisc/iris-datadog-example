@@ -1,0 +1,35 @@
+Objection / Inquiry 1: from prospective customer:
+    “My team is too busy fighting fires to evaluate another monitoring tool.”
+Response :
+    On traite toujours l'urgence et on n'adresse pas les sujets de fond.
+    Organiser un POC piloté par DataDog.
+    Pour démontrer la valuer ajouter de DaaDog pour détecter au mieux les incendies et gagner du temps.
+
+Objection / Inquiry 2: from prospective customer:
+    “We’re a mobile gaming company about to release an online multiplayer game that’s been super hyped up in the media. We’re bracing for a huge influx of traffic on launch day so we’ll be scaling up very quickly. Can Datadog help during this critical period?”
+Response :
+    1/ upscaler c'est bien, mais savoir downgrader c'est mieux
+    2/ le monitoring est il consomateur de ressources, non aveec datadog
+    1/ DataDog est SaaS donc scalable
+    2/ Monitoring des pod, kubernetes, ect
+    3/ example de societe dans le meme domaine
+
+Objection / Inquiry 3: from prospective customer:
+    “We’re using a hosted ELK stack and it works well enough. Tell me why Datadog’s log tool is better than what we have today. How can it help us?”
+Response :
+    1/ OnPrems vs SaaS
+
+Objection / Inquiry 4: from prospective customer:
+    “I hear Datadog is great at monitoring Public Cloud Infrastructure but we’re not moving to the Cloud, we don’t need another monitoring solution.”
+Response :
+    1/ DataDog est pour les clouds publics (c'est vrai mais pas que)
+    Pourquoi vous ne migrer pas dans le cloud ?
+    DataDog fonctionne OnPrems avec les agents (pas de VPN)
+
+Objection / Inquiry 5: from prospective customer:
+    “I’m not sure our security team would let us use a SaaS based monitoring solution. My team tells me we MUST have our infrastructure performance data on premise.”
+Response :
+    Pouvons nous discuter avec votre RSSI
+    RGPD + ISO 27001
+
+

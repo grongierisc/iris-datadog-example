@@ -1,0 +1,15 @@
+FROM python:3.9
+
+WORKDIR /code
+
+COPY ./requirements.txt /code/requirements.txt
+COPY *.whl /code/
+
+RUN pip install /code/*.whl
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY ./app /code/app
+
+WORKDIR /code/app
+
+CMD ["ddtrace-run", "gunicorn", "--conf", "gunicorn_conf.py", "--bind", "0.0.0.0:5000", "wsgi:app"]

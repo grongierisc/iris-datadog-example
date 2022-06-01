@@ -1,40 +1,158 @@
-version: '3.6'
+version: "2.2"
 services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    ports:
+      - 8126:8126
+    environment:
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: ${DD_SITE}
+      DD_HOSTNAME: dd-apm-agent
+      DD_APM_ENABLED: true
+      DD_APM_NON_LOCAL_TRAFFIC: true
+      DD_ENV: ${DD_ENV}
   flask:
     build:
-      context: .
-      dockerfile: dockerfile-flask
+      context: flask
+      dockerfile: Dockerfile
     ports:
-      - 80:80
+      - 5000:5000
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - DD_ENV=${DD_ENV} 
+      - DD_SERVICE=flask
+      - DD_VERSION=1.0.0 
+      - DD_AGENT_HOST=datadog-agent 
+      - DD_TRACE_AGENT_PORT=8126 
+      - DD_LOGS_INJECTION=true 
+      - DD_TRACE_DEBUG=true
+    restart: 'on-failure'
     depends_on:
       - iris
-    volumes:
-      - ./src/python:/code
-  iris:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    command: --check-caps false
-    ports: 
-      - 51773:1972
-      - 57777:52773
-      - 53773
-    volumes:
-      - ./:/irisdev/app
+      - db
+
   db:
-    image: postgres:12.2
-    hostname: db
-    environment:
-        POSTGRES_DB: DemoData
-        POSTGRES_PASSWORD: DemoData
-        POSTGRES_USER: DemoData
-    healthcheck:
-        test: ["CMD", "pg_isready", "-U", "DemoData"]
-        interval: 30s
-        timeout: 30s
-        retries: 3
+    image: postgres:12
     ports:
-    - 5432:5432
-    volumes:
-      - ./postgres:/docker-entrypoint-initdb.d/
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+
+  jgw:
+    depends_on:
+      - datadog-agent
+    environment:
+      - JAVA_GATEWAY
+      - JVMARGS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -javaagent:/jgw/dd-java-agent.jar 
+      - DD_ENV=${DD_ENV} 
+      - DD_SERVICE=jgw
+      - DD_VERSION=1.0.0 
+      - DD_AGENT_HOST=datadog-agent 
+      - DD_TRACE_AGENT_PORT=8126 
+      - DD_LOGS_INJECTION=true 
+      - DD_TRACE_DEBUG=true
+    build:
+      context: java
+      dockerfile: Dockerfile
+      args:
+        IRIS_IMAGE: ${IRIS_IMAGE}
+    restart: always
+    ports:
+      - ${JAVA_GATEWAY}:55555
+      - 5005:5005
+
+  netgw:
+    depends_on:
+      - datadog-agent
+    build:
+      context: dotnet
+      dockerfile: Dockerfile
+      args:
+        IRIS_IMAGE: ${IRIS_IMAGE}
+    restart: always
+    environment: 
+      - DOTNET_GATEWAY
+      - DD_ENV=${DD_ENV} 
+      - DD_SERVICE=netgw
+      - DD_VERSION=1.0.0 
+      - DD_AGENT_HOST=datadog-agent 
+      - DD_TRACE_AGENT_PORT=8126 
+      - DD_LOGS_INJECTION=true 
+      - DD_TRACE_DEBUG=true
+    ports: 
+      - ${DOTNET_GATEWAY}:${DOTNET_GATEWAY}
+
+  pygw:
+    depends_on:
+      - datadog-agent
+    build:
+      context: py
+      dockerfile: Dockerfile
+      args:
+        IRIS_IMAGE: ${IRIS_IMAGE}
+    restart: always
+    environment: 
+      - PYTHON_GATEWAY
+      - DD_ENV=${DD_ENV} 
+      - DD_SERVICE=pygw
+      - DD_VERSION=1.0.0 
+      - DD_AGENT_HOST=datadog-agent 
+      - DD_TRACE_AGENT_PORT=8126 
+      - DD_LOGS_INJECTION=true 
+      - DD_TRACE_DEBUG=true
+    ports:
+      - ${PYTHON_GATEWAY}:${PYTHON_GATEWAY}
+
+  iris:
+    init: true
+    command: --check-caps false
+    build:
+      context: iris
+      dockerfile: Dockerfile
+      args:
+        IRIS_IMAGE: ${IRIS_IMAGE}
+    ports:
+      - 57773:52773
+      - 51773:1972
+    labels:
+      # https://github.com/DataDog/datadog-agent/issues/11436
+      com.datadoghq.ad.check_names: '["openmetrics"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: |
+        [
+          {
+            "openmetrics_endpoint": "http://%%host%%:52773/api/monitor/metrics",
+            "namespace": "prometheus",
+            "metrics" : [{"iris.*":{"type":"gauge"}}]
+          }
+        ] 
+
+  zookeeper:
+    image: 'confluentinc/cp-zookeeper:5.3.1-1'
+    hostname: 'zookeeper'
+    ports:
+      - 2181:2181
+    environment:
+      - 'ZOOKEEPER_CLIENT_PORT=2181'
+      - 'ZOOKEEPER_TICK_TIME=2000'
+    restart: 'on-failure'
+
+  kafka:
+    image: 'confluentinc/cp-kafka:5.3.1-1'
+    hostname: 'kafka'
+    depends_on:
+      - 'zookeeper'
+    ports:
+      - 9092:9092
+    environment:
+      - 'KAFKA_BROKER_ID=1'
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181'
+      - 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.17.111.209:9092'
+      - 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      - 'KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT'
+      - 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
+      - 'KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1'
+      - 'KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1'
+    restart: 'on-failure'
