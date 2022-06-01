@@ -188,8 +188,8 @@ services:
     restart: 'on-failure'
     labels:
       com.datadoghq.ad.logs: '[{"source": "kafka", "service": "kafka"}]'
-      com.datadoghq.ad.check_names: '["jmx"]'
-      com.datadoghq.ad.init_configs: '[{"is_jmx": true, "collect_default_metrics": true}]'
+      com.datadoghq.ad.check_names: '["kafka"]'
+      com.datadoghq.ad.init_configs: '[{"is_jmx": true}]'
       com.datadoghq.ad.instances: |
         [{"host": "%%host%%","port":"9999"}] 
 
