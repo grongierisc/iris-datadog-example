@@ -1,7 +1,25 @@
 version: "2.2"
 services:
   datadog-agent:
-    image: gcr.io/datadoghq/agent:7
+    image: gcr.io/datadoghq/agent:latest
+    environment:
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: ${DD_SITE}
+      DD_HOSTNAME: dd-agent
+      DD_APM_ENABLED: false
+      DD_LOGS_ENABLED: true
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: true
+    volumes:
+      - ./datadog/datadog-agent/:/etc/datadog-agent/
+      - ./datadog/datadog-agent/conf.d/:/etc/datadog-agent/conf.d
+      - ./datadog/datadog-agent/checks.d/:/etc/datadog-agent/checks.d
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+  datadog-agent-apm:
+    image: gcr.io/datadoghq/agent:latest-jmx
     ports:
       - 8126:8126
     environment:
@@ -11,6 +29,10 @@ services:
       DD_APM_ENABLED: true
       DD_APM_NON_LOCAL_TRAFFIC: true
       DD_ENV: ${DD_ENV}
+    volumes:
+      - ./datadog/datadog-agent-apm/:/etc/datadog-agent/
+      - ./datadog/datadog-agent-apm/conf.d/:/etc/datadog-agent/conf.d
+      - ./datadog/datadog-agent-apm/checks.d/:/etc/datadog-agent/checks.d
   flask:
     build:
       context: flask
@@ -137,6 +159,9 @@ services:
     environment:
       - 'ZOOKEEPER_CLIENT_PORT=2181'
       - 'ZOOKEEPER_TICK_TIME=2000'
+      - 'KAFKA_JMX_PORT=9999'
+      - 'KAFKA_JMX_OPTS=-Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false'
+
     restart: 'on-failure'
 
   kafka:
@@ -144,8 +169,10 @@ services:
     hostname: 'kafka'
     depends_on:
       - 'zookeeper'
+      - 'datadog-agent'
     ports:
       - 9092:9092
+      - 9999:9999
     environment:
       - 'KAFKA_BROKER_ID=1'
       - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181'
@@ -155,7 +182,15 @@ services:
       - 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
       - 'KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1'
       - 'KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1'
+      - 'KAFKA_JMX_PORT=9999'
+      - 'KAFKA_JMX_OPTS=-Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false'
     restart: 'on-failure'
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "kafka", "service": "kafka"}]'
+      com.datadoghq.ad.check_names: '["jmx"]'
+      com.datadoghq.ad.init_configs: '[{"is_jmx": true, "collect_default_metrics": true}]'
+      com.datadoghq.ad.instances: |
+        [{"host": "%%host%%","port":"9999"}] 
 
 networks:
   default:
