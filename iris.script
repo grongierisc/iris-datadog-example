@@ -1,27 +1,29 @@
-    zn "%SYS"
-    Do ##class(Security.Users).UnExpireUserPasswords("*")
 
-    do ##class(Security.Services).Get("%Service_CallIn",.prop)
-    set prop("Enabled")=1
-    set prop("AutheEnabled")=48
-    do ##class(Security.Services).Modify("%Service_CallIn",.prop)
+ zn "%SYS"
+ Do ##class(Security.Users).UnExpireUserPasswords("*")
+
+ do ##class(Security.Services).Get("%Service_CallIn",.prop)
+ set prop("Enabled")=1
+ set prop("AutheEnabled")=48
+ do ##class(Security.Services).Modify("%Service_CallIn",.prop)
+
+ set $namespace="%SYS", name="DefaultSSL" do:'##class(Security.SSLConfigs).Exists(name) ##class(Security.SSLConfigs).Create(name) set url="https://pm.community.intersystems.com/packages/zpm/latest/installer" Do ##class(%Net.URLParser).Parse(url,.comp) set ht = ##class(%Net.HttpRequest).%New(), ht.Server = comp("host"), ht.Port = 443, ht.Https=1, ht.SSLConfiguration=name, st=ht.Get(comp("path")) quit:'st $System.Status.GetErrorText(st) set xml=##class(%File).TempFilename("xml"), tFile = ##class(%Stream.FileBinary).%New(), tFile.Filename = xml do tFile.CopyFromAndSave(ht.HttpResponse.Data) do ht.%Close(), $system.OBJ.Load(xml,"ck") do ##class(%File).Delete(xml)
 
 
-    zn "USER"
-    ; run installer to create namespace
-    do $SYSTEM.OBJ.Load("/irisdev/app/Installer.cls", "ck")
-    set sc = ##class(App.Installer).setup() 
+ zn "USER"
 
-    zn "IRISAPP"
-    zw $SYSTEM.OBJ.ImportDir("/irisdev/app/src", "*.cls", "cubk", .tErrors, 1)
-    zpm "install pex-embbeded-python"
+ do ##class(%Library.EnsembleMgr).EnableNamespace("USER",1)
+ do $SYSTEM.SQL.Schema.ImportDDL("/irisdev/app/Sample.sql","/tmp/sql.log","IRIS")
 
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bo","FileOperation","/irisdev/app/src/python/",1,"Python.FileOperation")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bo","IrisOperation","/irisdev/app/src/python/",1,"Python.IrisOperation")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bp","Router","/irisdev/app/src/python/",1,"Python.Router")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bs","ServiceCSV","/irisdev/app/src/python/",1,"Python.ServiceCSV")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bs","FlaskService","/irisdev/app/src/python/",1,"Python.FlaskService")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bs","PatientService","/irisdev/app/src/python/",1,"Python.PatientService")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bp","PatientProcess","/irisdev/app/src/python/",1,"Python.PatientProcess")
-    zw ##class(Grongier.PEX.Utils).RegisterComponent("bo","PostgresOperation","/irisdev/app/src/python/",1,"Python.PostgresOperation")
-    h
+ zpm "install pex-embbeded-python" 
+ 
+ zw ##class(Grongier.PEX.Utils).RegisterComponent("bs","FlaskService","/irisdev/app/src/python/app/",1,"Python.FlaskService")
+ zw ##class(Grongier.PEX.Utils).RegisterComponent("bo","CrudPerson","/irisdev/app/src/python/app/",1,"Python.CrudPerson")
+
+ do $System.OBJ.LoadDir("/irisdev/app/src/ObjectScript","cubk","*.cls",1)
+
+ set ^EnsPortal.Settings("SuperUser","LastProduction")	= "Python.Production"
+
+ zw ##class(Ens.Director).SetAutoStart("Python.Production")
+
+ halt

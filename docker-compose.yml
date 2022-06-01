@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.6'
 services:
   flask:
     build:
@@ -6,15 +6,22 @@ services:
       dockerfile: dockerfile-flask
     ports:
       - 80:80
+    depends_on:
+      - iris
+    volumes:
+      - ./src/python:/code
   iris:
-    build:
+    build: 
       context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: --check-caps false
+    ports: 
+      - 51773:1972
+      - 57777:52773
+      - 53773
     volumes:
       - ./:/irisdev/app
-    command: --check-caps false
-    ports:
-    - 52775:52773
-    - 51776:1972
   db:
     image: postgres:12.2
     hostname: db

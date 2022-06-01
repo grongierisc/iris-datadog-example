@@ -1,3 +1,6 @@
 .DS_Store
 __pycache__
+waitISC.log
 iris-main.log
+sql.log
+src/python/person/main.py

@@ -1,12 +1,14 @@
 {
+  "python.languageServer" : "Pylance",
+  
     "files.associations": {
     
         "Dockerfile*": "dockerfile",
         "iris.script": "objectscript"
       },
     "objectscript.conn" :{
-      "ns": "IRISAPP",
-      "username": "SuperUser",
+      "ns": "USER",
+      "username": "_SYSTEM",
       "password": "SYS",
       "docker-compose": {
         "service": "iris",
@@ -14,16 +16,21 @@
       },
       "active": true
     },
+    "python.defaultInterpreterPath":"/opt/intersystems/iris/bin/irispython",
+    "python.pythonPath":"/usr/irissys/bin/irispython",
     "sqltools.connections": [
       {
+        "namespace": "USER",
+        "connectionMethod": "Server and Port",
+        "showSystem": false,
         "previewLimit": 50,
-        "server": "db",
-        "port": 5432,
-        "driver": "PostgreSQL",
-        "name": "db",
-        "database": "DemoData",
-        "username": "DemoData",
-        "password": "DemoData"
+        "server": "localhost",
+        "port": 32770,
+        "askForPassword": false,
+        "driver": "InterSystems IRIS",
+        "name": "objectscript-docker",
+        "username": "_SYSTEM",
+        "password": "SYS"
       }
     ]
 
