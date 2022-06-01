@@ -1,7 +1,7 @@
-version: "2.2"
+version: "3.3"
 services:
   datadog-agent:
-    image: gcr.io/datadoghq/agent:latest
+    image: gcr.io/datadoghq/agent:latest-jmx
     environment:
       DD_API_KEY: ${DD_API_KEY}
       DD_SITE: ${DD_SITE}
@@ -19,7 +19,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
   datadog-agent-apm:
-    image: gcr.io/datadoghq/agent:latest-jmx
+    image: gcr.io/datadoghq/agent:latest
     ports:
       - 8126:8126
     environment:
@@ -44,7 +44,7 @@ services:
       - DD_ENV=${DD_ENV} 
       - DD_SERVICE=flask
       - DD_VERSION=1.0.0 
-      - DD_AGENT_HOST=datadog-agent 
+      - DD_AGENT_HOST=datadog-agent-apm 
       - DD_TRACE_AGENT_PORT=8126 
       - DD_LOGS_INJECTION=true 
       - DD_TRACE_DEBUG=true
@@ -62,6 +62,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
 
+
   jgw:
     depends_on:
       - datadog-agent
@@ -71,7 +72,7 @@ services:
       - DD_ENV=${DD_ENV} 
       - DD_SERVICE=jgw
       - DD_VERSION=1.0.0 
-      - DD_AGENT_HOST=datadog-agent 
+      - DD_AGENT_HOST=datadog-agent-apm 
       - DD_TRACE_AGENT_PORT=8126 
       - DD_LOGS_INJECTION=true 
       - DD_TRACE_DEBUG=true
@@ -99,7 +100,7 @@ services:
       - DD_ENV=${DD_ENV} 
       - DD_SERVICE=netgw
       - DD_VERSION=1.0.0 
-      - DD_AGENT_HOST=datadog-agent 
+      - DD_AGENT_HOST=datadog-agent-apm 
       - DD_TRACE_AGENT_PORT=8126 
       - DD_LOGS_INJECTION=true 
       - DD_TRACE_DEBUG=true
@@ -120,7 +121,7 @@ services:
       - DD_ENV=${DD_ENV} 
       - DD_SERVICE=pygw
       - DD_VERSION=1.0.0 
-      - DD_AGENT_HOST=datadog-agent 
+      - DD_AGENT_HOST=datadog-agent-apm 
       - DD_TRACE_AGENT_PORT=8126 
       - DD_LOGS_INJECTION=true 
       - DD_TRACE_DEBUG=true
@@ -152,20 +153,20 @@ services:
         ] 
 
   zookeeper:
-    image: 'confluentinc/cp-zookeeper:5.3.1-1'
+    image: 'confluentinc/cp-zookeeper:latest'
     hostname: 'zookeeper'
     ports:
       - 2181:2181
     environment:
       - 'ZOOKEEPER_CLIENT_PORT=2181'
       - 'ZOOKEEPER_TICK_TIME=2000'
-      - 'KAFKA_JMX_PORT=9999'
-      - 'KAFKA_JMX_OPTS=-Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false'
+      - 'JMX_PORT=9999'
+      - 'KAFKA_JMX_OPTS=-Djava.rmi.server.hostname=zookeeper -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false'
 
     restart: 'on-failure'
 
   kafka:
-    image: 'confluentinc/cp-kafka:5.3.1-1'
+    image: 'confluentinc/cp-kafka:latest'
     hostname: 'kafka'
     depends_on:
       - 'zookeeper'
@@ -182,8 +183,8 @@ services:
       - 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
       - 'KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1'
       - 'KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1'
-      - 'KAFKA_JMX_PORT=9999'
-      - 'KAFKA_JMX_OPTS=-Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false'
+      - 'JMX_PORT=9999'
+      - 'KAFKA_JMX_OPTS=-Djava.rmi.server.hostname=kafka -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false'
     restart: 'on-failure'
     labels:
       com.datadoghq.ad.logs: '[{"source": "kafka", "service": "kafka"}]'
