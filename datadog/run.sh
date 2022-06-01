@@ -13,7 +13,7 @@ docker run -d --cgroupns host \
             -e DD_LOGS_ENABLED=true \
             -e DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true \
             -e DD_CONTAINER_EXCLUDE="name:datadog-agent" \
-            --network pex-demo_default \
+            --network datadog-example \
             --name datadog-agent-docker \
             gcr.io/datadoghq/agent:latest 
             

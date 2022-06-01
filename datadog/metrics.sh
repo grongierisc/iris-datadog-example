@@ -8,7 +8,7 @@ docker run -d --cgroupns host \
             -e DD_SITE="datadoghq.eu" \
             -e DD_LOG_LEVEL="debug" \
             -e DD_CONTAINER_EXCLUDE="name:datadog-agent" \
-            --network pex-demo_default \
+            --network datadog-example \
             --name datadog-agent-metrics \
             gcr.io/datadoghq/agent:7
             
