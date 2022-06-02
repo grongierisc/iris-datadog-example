@@ -1,0 +1,7 @@
+init_config:
+
+instances:
+  - host: db
+    port: 5432
+    username: postgres
+    password: postgres
