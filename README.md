@@ -111,6 +111,14 @@ The agent it self :
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 ```
 
+Result :
+
+Infrastructure Map :
+
+<img width="1404" alt="image" src="https://user-images.githubusercontent.com/47849411/171635910-aabc0bcb-c49f-44a8-97c0-07d1d2d63b4a.png">
+
+
+
 #### 5.1.1.2. AutoDiscovery
 
 For Kafka and JMX
@@ -122,6 +130,10 @@ For Kafka and JMX
       com.datadoghq.ad.instances: |
         [{"host": "%%host%%","port":"9999"}] 
 ```
+
+Result :
+
+
 
 For IRIS and opentelemetry :
 ```yaml
