@@ -5,3 +5,4 @@ bin
 **auth_token
 datadog/datadog-agent/run/registry.json
 .gitignore
+datadog/datadog-agent/run/version-history.json
