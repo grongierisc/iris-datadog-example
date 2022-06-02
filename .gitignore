@@ -3,3 +3,5 @@ obj
 bin
 *.bak
 **auth_token
+datadog/datadog-agent/run/registry.json
+.gitignore
