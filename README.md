@@ -1,9 +1,31 @@
-# IRIS DataDog Example
+# 1. IRIS DataDog Example
 Demo showcasing InterSystems IRIS, Flask, Kafka and Postgres monitoring with DataDog.
 
 ![DataDog_macro excalidraw](https://user-images.githubusercontent.com/47849411/171481830-56d358de-79b5-41b3-8e38-b8de6df5a41d.png)
 
-# IRIS
+- [1. IRIS DataDog Example](#1-iris-datadog-example)
+- [2. IRIS + Kafka](#2-iris--kafka)
+- [3. Flask and Postgres](#3-flask-and-postgres)
+- [4. Running the demo](#4-running-the-demo)
+- [5. Demo DataDog](#5-demo-datadog)
+  - [5.1. datadog-agent](#51-datadog-agent)
+    - [5.1.1. Configrations](#511-configrations)
+      - [5.1.1.1. Agent](#5111-agent)
+      - [5.1.1.2. AutoDiscovery](#5112-autodiscovery)
+    - [5.1.2. Datadog status](#512-datadog-status)
+  - [5.2. datadog-agent-apm](#52-datadog-agent-apm)
+    - [5.2.1. Configuration](#521-configuration)
+      - [5.2.1.1. Agent](#5211-agent)
+      - [5.2.1.2. Postgres](#5212-postgres)
+      - [5.2.1.3. .Net Core](#5213-net-core)
+      - [5.2.1.4. Java](#5214-java)
+      - [5.2.1.5. Python Gateway](#5215-python-gateway)
+    - [5.2.2. Python flask](#522-python-flask)
+    - [5.2.3. Datadog status](#523-datadog-status)
+- [6. What's inside](#6-whats-inside)
+  - [6.1. UI](#61-ui)
+
+# 2. IRIS + Kafka
 
 IRIS is a database and a middleware, for this demo we mainly use it as a middleware. It makes use of PEX to manage an Kafka Produceur, an Kafka Consumer and a Python code to stimulate the Kafka Producer.
 
@@ -11,14 +33,14 @@ The Production EXtension (PEX) framework provides you with a choice of implement
 
 As of January 2022, PEX supports Python, Java, and .NET (C#) languages. PEX provides flexible connections between business services, processes, and operations that are implemented in PEX-supported languages or in InterSystems ObjectScript. In addition, you can use PEX to develop, inbound and outbound adapters. The PEX framework allows you to create an entire production in Pytohn or Java or .NET or to create a production that has a mix of Python, Java, .NET, or ObjectScript components. Once integrated, the production components written in Pytohn, Java, and .NET are called at runtime and use the PEX framework to send messages to other components in the production. 
 
-# Flask and Postgres
+# 3. Flask and Postgres
 
 The flask API has two objectives:
 1. To generate call loops between the consumer and the Kafka producer
 2. Manage a simple crud on a postgres database
 
 
-# Running the demo
+# 4. Running the demo
 
 1. Install:
     - [docker](https://docs.docker.com/get-docker/)
@@ -42,13 +64,13 @@ This will create a series of infinite calls to the Flask API with the following 
 2. One Post to the crud API
 3. Eight Get calls to the crud API
 
-# Demo DataDog
+# 5. Demo DataDog
 
 There are two datadog agents:
 - datadog-agent : To monitor docker instances and their logs
 - datadog-agent-apm : To monitor the code and the PostGres database
 
-## datadog-agent
+## 5.1. datadog-agent
 
 The purpose of this agent is to monitor the OS part of the containers, in particular the CPU, RAM, Disk consumption as well as to read the logs in the standard output of the containers.
 
@@ -56,8 +78,9 @@ In addition, this agent is responsible for retrieving custom metrics from the IR
 
 For the more, it also gather the JMX information from the Kafka JVM.
 
-### Configrations
+### 5.1.1. Configrations
 
+#### 5.1.1.1. Agent
 The agent it self :
 
 ```yaml
@@ -88,7 +111,7 @@ The agent it self :
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 ```
 
-AutoDiscovery :
+#### 5.1.1.2. AutoDiscovery
 
 For Kafka and JMX
 ```yaml
@@ -121,7 +144,7 @@ Postgres logs :
       com.datadoghq.ad.logs: '[{"source": "postgresql", "service": "postgres"}]'
 ```
 
-### Datadog status 
+### 5.1.2. Datadog status 
 
 To get an overview of the monitored services, we can use the status command:
 
@@ -506,7 +529,8 @@ Autodiscovery
   
 </details>
 
-## datadog-agent-apm
+
+## 5.2. datadog-agent-apm
 
 This agent is there to monitor the performance of the code in interaction with the eco-system.
 
@@ -518,9 +542,9 @@ In this demo, three languages are used and one database (postgres):
 - .Net Core 2.1
 - Java 1.8
 
-### Configuration
+### 5.2.1. Configuration
 
-#### Agent
+#### 5.2.1.1. Agent
 The agent it self :
 
 ```yaml
@@ -543,7 +567,7 @@ The agent it self :
       - ./datadog/datadog-agent-apm/checks.d/:/etc/datadog-agent/checks.d
 ```
 
-#### Postgres
+#### 5.2.1.2. Postgres
 To gather application metrics from postgres, we use this config file :
 
 ```yaml
@@ -558,7 +582,7 @@ instances:
 
 This file is mount to the container at `/etc/datadog-agent/conf.d/postgres.d/` from `datadog/datadog-agent-apm/conf.d/postgres.d`
 
-#### .Net Core
+#### 5.2.1.3. .Net Core
 
 For .Net core APM we use this config in the docker compose :
 
@@ -592,7 +616,7 @@ ENV DD_DOTNET_TRACER_HOME=/app/datadog
 # Run the createLogPath script on Linux to ensure the automatic instrumentation logs are genereated without permission isues
 RUN /app/datadog/createLogPath.sh
 ```
-#### Java
+#### 5.2.1.4. Java
 
 The configuration for Java is in two parts :
 
@@ -615,7 +639,7 @@ Configure the docker-compose to enable the datadog agent on the JVMARGS:
       - DD_TRACE_DEBUG=true
 ```
 
-#### Python Gateway
+#### 5.2.1.5. Python Gateway
 
 APM by default handle only standards libraries.
 
@@ -651,7 +675,7 @@ Decorate the traced function :
         return
 ```
 
-### Python flask
+### 5.2.2. Python flask
 
 APM on python flask is easier than python gateway because python flask, sqlachemy and psycopg2 are supported librairies from dd-agent :
 - https://docs.datadoghq.com/tracing/setup_overview/compatibility_requirements/python/#inetgrations
@@ -674,7 +698,7 @@ dd-trace before gunicorn :
 CMD ["ddtrace-run", "gunicorn", "--conf", "gunicorn_conf.py", "--bind", "0.0.0.0:5000", "wsgi:app"]
 ```
 
-### Datadog status 
+### 5.2.3. Datadog status 
 
 To get an overview of the monitored services, we can use the status command:
 
@@ -957,9 +981,11 @@ DogStatsD
 </details>
   
 </details>
-# What's inside
 
-## UI
+
+# 6. What's inside
+
+## 6.1. UI
 
 - InterSystems IRIS: `http://localhost:52773/csp/user/EnsPortal.ProductionConfig.zen`
 - Flask API: 
