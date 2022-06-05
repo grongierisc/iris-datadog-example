@@ -28,7 +28,7 @@ How does DataDog do it?
 
 First with a simple installation, no server to create and maintain, a simple agent installation is enough. Then with pre-built reports for more than 400 products on the market and finally the service map tool bring you the possibility to see in real time the whole information system and quickly discover the bottlenecks.
 
-If you don't make this choice, you'll stay in the emergency and you won't treat the problems at the root. 
+Not to make this choice is to remain in the emergency and not to treat the problems at the root. 
 
 If you choose to follow up with us, in one afternoon, I can come on site to give you a demo directly from your IS data and present you with turnkey dashboards that will allow you to identify the real source of the problems and be able to achive your SLAs.
 
